@@ -60,7 +60,7 @@ Open a terminal and run `npm run start:dev`
 
 # SCREENSHOTS
 Verse Selection
-![Verse Selection](https://github.com/wnbittle/bq-verse-dictation/blob/main/screenshots/client-color-selection.png)
+![Verse Selection](https://github.com/wnbittle/bq-verse-dictation/blob/main/screenshots/client-verse-selection.png)
 
 Color Selection
 ![Color Selection](https://github.com/wnbittle/bq-verse-dictation/blob/main/screenshots/client-color-selection.png)
