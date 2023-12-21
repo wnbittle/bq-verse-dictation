@@ -60,19 +60,19 @@ Open a terminal and run `npm run start:dev`
 
 # SCREENSHOTS
 Verse Selection
-![Verse Selection](https://github.com/wnbittle/bq-verse-dictation/screenshots/client-verse-selection.png)
+![Verse Selection](https://github.com/wnbittle/bq-verse-dictation/blob/main/screenshots/client-color-selection.png)
 
 Color Selection
-![Color Selection](https://github.com/wnbittle/bq-verse-dictation/screenshots/client-color-selection.png)
+![Color Selection](https://github.com/wnbittle/bq-verse-dictation/blob/main/screenshots/client-color-selection.png)
 
 Font Size Selection
-![Font Size Selection](https://github.com/wnbittle/bq-verse-dictation/screenshots/client-font-size-selection.png)
+![Font Size Selection](https://github.com/wnbittle/bq-verse-dictation/blob/main/screenshots/client-font-size-selection.png)
 
 Other Settings
-![Other Settings](https://github.com/wnbittle/bq-verse-dictation/screenshots/client-other-settings.png)
+![Other Settings](https://github.com/wnbittle/bq-verse-dictation/blob/main/screenshots/client-other-settings.png)
 
 Generate
-![Generate](https://github.com/wnbittle/bq-verse-dictation/screenshots/client-generate.png)
+![Generate](https://github.com/wnbittle/bq-verse-dictation/blob/main/screenshots/client-generate.png)
 
 
 # ORIGINAL SETUP - CLIENT
