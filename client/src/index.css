@@ -1,0 +1,53 @@
+body {
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.d-block { display: block; }
+.w-100p { width: 100%; }
+
+.p-s { padding: 10px; }
+.pb-s { padding-bottom: 10px; }
+.pt-s { padding-top: 10px; }
+.pr-s { padding-right: 10px; }
+.pl-s { padding-left: 10px; }
+
+.p-m { padding: 20px; }
+.pb-m { padding-bottom: 20px; }
+.pt-m { padding-top: 20px; }
+.pr-m { padding-right: 20px; }
+.pl-m { padding-left: 20px; }
+
+.p-l { padding: 30px; }
+.pb-l { padding-bottom: 30px; }
+.pt-l { padding-top: 30px; }
+.pr-l { padding-right: 30px; }
+.pl-l { padding-left: 30px; }
+
+.flex-row { display: flex; flex-direction: row; }
+.flex-column { display: flex; flex-direction: column; }
+.flex-gap-s { gap: 5px; }
+.flex-gap-m { gap: 10px; }
+.flex-gap-l { gap: 20px; }
+.flex-justify-center { justify-content: center; }
+.flex-row-align-right { margin-left: auto; }
+
+.hidden { display: none; }
+.strikethrough { text-decoration: line-through; }
+
+/* SelectedVerseCard */
+
+.svc-token {
+  display: inline-block;
+  padding: 0 2px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.svc-token:hover {
+  background-color: yellow;
+}
+
+.svc-token-selected {
+  background-color: lime !important;
+}
