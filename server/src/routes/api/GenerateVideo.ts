@@ -165,7 +165,7 @@ const combineFrameIntoVideo = async (rootPath: string, fps: number, outputFileNa
     const cwd = path.normalize(path.resolve(rootPath));
 
     // ffmpeg.exe -y -framerate 24 -i %d.png -c:v libx264 -pix_fmt yuv420p test.mp4
-    const command = `${ffmpeg} -y -framerate ${fps} -i %d.png -c:v libx264 -pix_fmt yuv420p ${outputFileName}`;
+    const command = `${ffmpeg} -y -framerate ${fps} -i %d.png -c:v libx264 -pix_fmt yuv420p "${outputFileName}"`;
     console.info(command);
     return await new Promise((resolve, reject) => {
         exec(command, {
@@ -183,7 +183,7 @@ const combineVideoAndAudio = async (rootPath: string, videoFileName: string, aud
     const audioPath = path.normalize(`../${audioFileName}`);
 
     // ffmpeg.exe -i test.mp4 -i 44-1-1.wav -c:v copy -c:a aac output.mp4
-    const command = `${ffmpeg} -y -i ${videoFileName} -i ${audioPath} -c:v copy -c:a aac ${outputFileName}`;
+    const command = `${ffmpeg} -y -i "${videoFileName}" -i "${audioPath}" -c:v copy -c:a aac "${outputFileName}"`;
     console.info(command);
     return await new Promise((resolve, reject) => {
         exec(command, {
@@ -199,7 +199,7 @@ const repeatVideo = async (rootPath: string, inputFileName: string, outputFileNa
     const cwd = path.normalize(path.resolve(rootPath));
 
     // ffmpeg.exe -stream_loop 15 -i output.mp4 -c copy output2.mp4
-    const command = `${ffmpeg} -y -stream_loop ${repeatCount} -i ${inputFileName} -c copy ${outputFileName}`;
+    const command = `${ffmpeg} -y -stream_loop ${repeatCount} -i "${inputFileName}" -c copy "${outputFileName}"`;
     console.info(command);
     return await new Promise((resolve, reject) => {
         exec(command, {
@@ -220,7 +220,7 @@ const concatVideo = async (rootPath: string, videoFileNames: string[], outputFil
     await writeFile(tempFile, files);
 
     // ffmpeg -i "concat:input1.ts|input2.ts" -c copy output.mp4
-    const command = `${ffmpeg} -y -f concat -safe 0 -i ${tempFile} -c copy ${outputFileName}`;
+    const command = `${ffmpeg} -y -f concat -safe 0 -i "${tempFile}" -c copy "${outputFileName}"`;
     console.info(command);
     await new Promise<void>((resolve, reject) => {
         exec(command, {
