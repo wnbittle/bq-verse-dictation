@@ -96,16 +96,16 @@ const convertIdToSelectedVerse = (id: string, sizing: ISizing): ISelectedVerse =
 
 const sortAndRenumberSelectedVerses = (verses: ISelectedVerse[]) => {
     // sort
-    verses.sort((a, b) => {
-        let diff = a.bookNumber - b.bookNumber;
-        if (diff === 0) {
-            diff = a.chapterNumber - b.chapterNumber;
-            if (diff === 0) {
-                diff = a.verseNumber - b.verseNumber;
-            }
-        }
-        return diff;
-    });
+    // verses.sort((a, b) => {
+    //     let diff = a.bookNumber - b.bookNumber;
+    //     if (diff === 0) {
+    //         diff = a.chapterNumber - b.chapterNumber;
+    //         if (diff === 0) {
+    //             diff = a.verseNumber - b.verseNumber;
+    //         }
+    //     }
+    //     return diff;
+    // });
 
     // default the study #
     verses.forEach((v, i) => {
