@@ -1,3 +1,6 @@
+import ISelectedVerse from "./model/ISelectedVerse";
+import ISettings from "./model/ISettings";
+
 /**
  * Converts from ticks to seconds.  1 tick = 100 nanoseconds.
  * @param offset the offset in ticks
@@ -16,4 +19,8 @@ export const convertOffsetToSeconds = (offset: number): number => {
 
     const adder = 0;
     return (offset + adder) / 10000.0 / 1000.0;
+}
+
+export const generateUniqueFileName = (verse: ISelectedVerse) => {
+    return `${verse.bookName}-${verse.chapterNumber}-${verse.verseNumber}-${verse.voice.name.replace(':', '-')}-${verse.voice.style}-${verse.voice.rate.replace('%', 'p')}`;
 }

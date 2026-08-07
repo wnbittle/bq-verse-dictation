@@ -1,10 +1,9 @@
 import IQuality from "./IQuality";
+import IVoice from "./IVoice";
 
 export default interface ISettings {
     name: string;
-    speechVoice: string;        // 'en-US-JaneNeural';
-    speechStyle: string;        // 'sad';
-    speechRate: string;         //'-10.00%';
+    voice: IVoice;
     videoFPS: number;           // 24
     quality: IQuality;
     colors: string[];

@@ -29,8 +29,12 @@ body {
 .flex-gap-s { gap: 5px; }
 .flex-gap-m { gap: 10px; }
 .flex-gap-l { gap: 20px; }
+.flex-gap-xl { gap: 40px; }
 .flex-justify-center { justify-content: center; }
 .flex-row-align-right { margin-left: auto; }
+.flex-1 { flex: 1; }
+.flex-0 { flex: 0; }
+.flex-grow-0 { flex-grow: 0 !important; }
 
 .hidden { display: none; }
 .strikethrough { text-decoration: line-through; }

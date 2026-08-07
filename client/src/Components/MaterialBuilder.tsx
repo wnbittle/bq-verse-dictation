@@ -38,9 +38,14 @@ const books: IBook[] = bible.books;
 
 const defaultSettings: ISettings = {
     name: 'Untitled',
-    speechVoice: 'en-US-JaneNeural',
-    speechStyle: 'sad',
-    speechRate: '-10.00%',
+    voice: {
+        locale: 'en-us',
+        gender: 'Female',
+        age: 'Adult',
+        name: 'en-us-jane:DragonHDOmniLatestNeural',
+        style: 'general',
+        rate: '1',
+    },
     videoFPS: 24,
     quality: Qualities[1],
     colors: [
@@ -73,7 +78,7 @@ const getEnhancedVerse = (book: IBook, chapter: IChapter, verse: IVerse) => {
     };
 };
 
-const convertIdToSelectedVerse = (id: string, sizing: ISizing): ISelectedVerse => {
+const convertIdToSelectedVerse = (id: string, sizing: ISizing, settings: ISettings): ISelectedVerse => {
     const [b, c, v] = id.split('-').map(s => parseInt(s, 10));
 
     const bk = books.find(book => book.number === b);
@@ -90,7 +95,8 @@ const convertIdToSelectedVerse = (id: string, sizing: ISizing): ISelectedVerse =
         verseText: vs?.text ?? '',
         breaks: [],
         aliases: [],
-        sizing: { ...sizing }
+        sizing: { ...sizing },
+        voice: { ...settings.voice }
     };
 };
 
@@ -200,7 +206,7 @@ export const MaterialBuilder = () => {
         // add the ones that were added
         toAdd.forEach(v => {
             newSelected.add(v);
-            newSelectedVerses.push(convertIdToSelectedVerse(v, defaultSizing));
+            newSelectedVerses.push(convertIdToSelectedVerse(v, defaultSizing, settings));
         });
 
         sortAndRenumberSelectedVerses(newSelectedVerses);
@@ -315,6 +321,15 @@ export const MaterialBuilder = () => {
     };
 
     const onVerseAliasChange = (verse: ISelectedVerse) => {
+        const selected = [...selectedVerses];
+        const idx = selected.findIndex(v => v.id === verse.id);
+        if (idx >= 0) {
+            selected[idx] = verse;
+        }
+        setSelectedVerses(selected);
+    };
+
+    const onVerseVoiceChange = (verse: ISelectedVerse) => {
         const selected = [...selectedVerses];
         const idx = selected.findIndex(v => v.id === verse.id);
         if (idx >= 0) {
@@ -477,6 +492,7 @@ export const MaterialBuilder = () => {
                     onVerseDeselectClick={onVerseDeselectClick}
                     onVerseBreakChange={onVerseBreakChange}
                     onVerseAliasChange={onVerseAliasChange}
+                    onVerseVoiceChange={onVerseVoiceChange}
                     onChapterRemove={onChapterRemove}
                 />
             </div>

@@ -1,11 +1,13 @@
 import * as React from "react";
 import { Card, CardHeader, Button, Badge, Subtitle2Stronger, Link, Tooltip, Dialog, DialogTrigger, DialogSurface, DialogBody, DialogTitle, DialogContent, DialogActions, Field, Input, InputOnChangeData } from "@fluentui/react-components";
-import { CopyRegular, DeleteRegular } from "@fluentui/react-icons";
+import { CopyRegular, DeleteRegular, PersonVoiceRegular } from "@fluentui/react-icons";
 
 import ISelectedVerse from "../model/ISelectedVerse";
 import { AudioPlayer } from "../Controls/AudioPlayer";
 import ISettings from "../model/ISettings";
 import IAlias from "../model/IAlias";
+import { VoiceSelector } from "./VoiceSelector";
+import IVoice from "../model/IVoice";
 
 export interface ISelectedVerseCardProps {
     settings: ISettings;
@@ -14,6 +16,7 @@ export interface ISelectedVerseCardProps {
     onVerseDeselectClick: (verse: ISelectedVerse) => void;
     onVerseBreakChange: (verse: ISelectedVerse) => void;
     onVerseAliasChange: (verse: ISelectedVerse) => void;
+    onVerseVoiceChange: (verse: ISelectedVerse) => void;
 }
 
 interface IToken {
@@ -34,6 +37,12 @@ export const SelectedVerseCard = (props: ISelectedVerseCardProps) => {
 
     const [selectedToken, setSelectedToken] = React.useState<IAlias>();
     const [aliasModalOpen, setAliasModelOpen] = React.useState<boolean>(false);
+    const [voiceModalOpen, setVoiceModalOpen] = React.useState<boolean>(false);
+    const [voice, setVoice] = React.useState(props.verse.voice);
+
+    React.useEffect(() => {
+        setVoice(props.verse.voice);
+    }, [props.verse]);
 
     let position = 0;
     items.forEach((t, i) => {
@@ -132,6 +141,29 @@ export const SelectedVerseCard = (props: ISelectedVerseCardProps) => {
         setAliasModelOpen(false);
     };
 
+    const onVoiceSelectionApply = () => {
+        setVoiceModalOpen(false);
+        console.log('onVoiceSelectionApply: ', voice);
+        props.onVerseVoiceChange({
+            ...props.verse,
+            voice: { ...voice }
+        });
+        // TODO reset the player status
+    };
+
+    const onVoiceSelectionCancel = () => {
+        setVoiceModalOpen(false);
+        setVoice(props.verse.voice);
+    };
+
+    const onVoiceSelectionChanged = (voice: IVoice) => {
+        setVoice(voice);
+    };
+
+    const onChangeVoiceSettingsClick = () => {
+        setVoiceModalOpen(true);
+    };
+
     return (
         <Card>
             <CardHeader
@@ -144,6 +176,17 @@ export const SelectedVerseCard = (props: ISelectedVerseCardProps) => {
                 action={
                     <div className="flex-row">
                         <AudioPlayer settings={props.settings} verse={props.verse} />
+                        <Tooltip
+                            withArrow
+                            content="Change voice settings"
+                            relationship="label">
+                            <Button
+                                appearance="subtle"
+                                icon={<PersonVoiceRegular />}
+                                aria-label="Change voice settings"
+                                onClick={onChangeVoiceSettingsClick}
+                            />
+                        </Tooltip>
                         <Tooltip
                             withArrow
                             content="Copy verse text"
@@ -192,6 +235,25 @@ export const SelectedVerseCard = (props: ISelectedVerseCardProps) => {
                         <DialogActions>
                             <Button appearance="secondary" onClick={onAliasCancel}>Cancel</Button>
                             <Button appearance="primary" onClick={onAliasApply}>Apply</Button>
+                        </DialogActions>
+                    </DialogBody>
+                </DialogSurface>
+            </Dialog>
+
+            <Dialog open={voiceModalOpen}>
+                <DialogSurface>
+                    <DialogBody>
+                        <DialogTitle>Change Voice</DialogTitle>
+                        <DialogContent>
+                            <p>See here for voice setting options: <Link href="https://speech.microsoft.com/portal/8a433965d84745b8aba1c7cad835c29c/voicegallery">Voice Gallery</Link></p>
+                            <VoiceSelector 
+                                voice={voice}
+                                onVoiceSelectionChanged={onVoiceSelectionChanged}
+                            />
+                        </DialogContent>
+                        <DialogActions>
+                            <Button appearance="secondary" onClick={onVoiceSelectionCancel}>Cancel</Button>
+                            <Button appearance="primary" onClick={onVoiceSelectionApply}>Apply</Button>
                         </DialogActions>
                     </DialogBody>
                 </DialogSurface>

@@ -4,13 +4,14 @@ import { promisify } from 'node:util';
 
 import IGenerateRequest from '../../model/IGenerateRequest';
 import TextToSpeechConverter from '../../speech/TextToSpeechConverter';
+import { generateUniqueFileName } from '../../Helpers';
 
 const writeFile = promisify(fs.writeFile);
 
 export const GenerateAudio = async (request: express.Request, response: express.Response): Promise<void> => {
     const input: IGenerateRequest = request.body;
 
-    const baseFileName = `${input.verse.bookName}-${input.verse.chapterNumber}-${input.verse.verseNumber}`;
+    const baseFileName = generateUniqueFileName(input.verse);
     const jsonFileName = `${baseFileName}.json`;
 
     const converter = new TextToSpeechConverter(input.settings, input.verse);

@@ -14,6 +14,7 @@ export interface ISelectedVersesPanelProps {
     onVerseDeselectClick: (verse: ISelectedVerse) => void;
     onVerseBreakChange: (verse: ISelectedVerse) => void;
     onVerseAliasChange: (verse: ISelectedVerse) => void;
+    onVerseVoiceChange: (verse: ISelectedVerse) => void;
     onChapterRemove: (bookNumber: number, chapterNumber: number) => void;
 }
 
@@ -99,7 +100,8 @@ export const SelectedVersesPanel = (props: ISelectedVersesPanelProps) => {
                                             onVerseHeaderClick={props.onVerseHeaderClick}
                                             onVerseDeselectClick={props.onVerseDeselectClick}
                                             onVerseBreakChange={props.onVerseBreakChange}
-                                            onVerseAliasChange={props.onVerseAliasChange} />
+                                            onVerseAliasChange={props.onVerseAliasChange}
+                                            onVerseVoiceChange={props.onVerseVoiceChange} />
                                     ))}
                                 </div>
                             </AccordionPanel>

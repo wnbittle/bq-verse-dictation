@@ -7,6 +7,7 @@ import { promisify } from 'node:util';
 import HTML5Renderer from '../../renderer/HTML5Renderer';
 import ISynthesizedVerse from '../../model/ISynthesizedVerse';
 import getVideoDurationInSeconds from 'get-video-duration';
+import { generateUniqueFileName } from '../../Helpers';
 
 const mkdir = promisify(fs.mkdir);
 const rm = promisify(fs.rm);
@@ -27,7 +28,7 @@ interface IChapter {
 export const GenerateVideo = async (request: express.Request, response: express.Response): Promise<void> => {
     const input: ISynthesizedVerse = request.body;
 
-    const baseFileName = `${input.bookName}-${input.chapterNumber}-${input.verseNumber}`;
+    const baseFileName = generateUniqueFileName(input);
     const referenceVideoFileName = `${baseFileName}-ref.mp4`;
 
     // generate the video for the reference first

@@ -5,6 +5,7 @@ import { promisify } from 'node:util';
 import fs from 'fs';
 import crypto from 'crypto';
 import { Mutex } from 'async-mutex';
+import { generateUniqueFileName } from '../../Helpers';
 
 const mkdir = promisify(fs.mkdir);
 const writeFile = promisify(fs.writeFile);
@@ -14,7 +15,7 @@ const mutex = new Mutex();
 export const PrepareAudioPreview = async (request: express.Request, response: express.Response): Promise<void> => {
     const input: IGenerateRequest = request.body;
 
-    const baseFileName = `${input.verse.bookName}-${input.verse.chapterNumber}-${input.verse.verseNumber}`;
+    const baseFileName = generateUniqueFileName(input.verse);
 
     try {
         console.info(`Attempting to create tmp folder`);

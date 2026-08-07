@@ -1,6 +1,7 @@
 import IAlias from "./IAlias";
 import IBreak from "./IBreak";
 import ISizing from "./ISizing";
+import IVoice from "./IVoice";
 
 export default interface ISelectedVerse {
     /** The verse id {booknumber}-{chapternumber}-{versenumber} */
@@ -32,4 +33,7 @@ export default interface ISelectedVerse {
 
     /** The render sizing */
     sizing: ISizing;
+    
+    /** The voice for the verse */
+    voice: IVoice;
 }

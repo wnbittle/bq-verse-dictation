@@ -7,6 +7,7 @@ import IWordOffset from "../model/IWordOffset";
 import ITextToSpeechResult from "../model/ITextToSpeechResult";
 import IAudioChunk from "../model/IAudioChunk";
 import IAlias from "../model/IAlias";
+import { generateUniqueFileName } from "../Helpers";
 
 export default class TextToSpeechConverter {
     private readonly settings: ISettings;
@@ -18,13 +19,14 @@ export default class TextToSpeechConverter {
     }
 
     async convert(chunk: boolean = true): Promise<ITextToSpeechResult> {
-        const baseFileName = `${this.verse.bookName}-${this.verse.chapterNumber}-${this.verse.verseNumber}`;
+        const baseFileName = generateUniqueFileName(this.verse);
+        const voice = this.verse.voice ?? this.settings.voice;
 
         console.info("Building speech configuration");
         const speechConfig = SpeechConfig.fromSubscription(process.env.SPEECH_KEY!, process.env.SPEECH_REGION!);
-        speechConfig.speechSynthesisVoiceName = this.settings.speechVoice;
+        speechConfig.speechSynthesisVoiceName = voice.name;
 
-        console.info(`Creating the speech synthesizer for: ${this.settings.speechVoice}`);
+        console.info(`Creating the speech synthesizer for: ${voice.name}`);
         var synthesizer = new SpeechSynthesizer(speechConfig);
 
         // output data
@@ -43,9 +45,7 @@ export default class TextToSpeechConverter {
 
             // settings
             name: this.settings.name,
-            speechRate: this.settings.speechRate,
-            speechStyle: this.settings.speechStyle,
-            speechVoice: this.settings.speechVoice,
+            voice: voice,
             videoFPS: this.settings.videoFPS,
             quality: this.settings.quality,
             colors: this.settings.colors,
@@ -111,9 +111,9 @@ export default class TextToSpeechConverter {
 
             // produce a text for the synthesizer to speak
             const ssml = `<speak version='1.0' xml:lang='en-US' xmlns='http://www.w3.org/2001/10/synthesis' xmlns:mstts='http://www.w3.org/2001/mstts'> \r\n \
-                <voice name='${this.settings.speechVoice}'> \r\n \
-                    <mstts:express-as style="${this.settings.speechStyle}"> \r\n \
-                        <prosody rate="${this.settings.speechRate}">${speakSSML}</prosody> \r\n \
+                <voice name='${voice.name}'> \r\n \
+                    <mstts:express-as style="${voice.style}"> \r\n \
+                        <prosody rate="${voice.rate}">${speakSSML}</prosody> \r\n \
                     </mstts:express-as> \r\n \
                 </voice> \r\n \
             </speak>`;
