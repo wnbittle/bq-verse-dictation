@@ -37,9 +37,13 @@ export default class HTML5Renderer implements IRenderer {
         this.chunk = chunk;
         this.verse = verse;
 
-        this.bookOffset = convertOffsetToSeconds(chunk.bookmarks.find(b => b.bookmark === 'reference-start')?.offset ?? Number.MAX_VALUE);
-        this.chapterOffset = convertOffsetToSeconds(chunk.bookmarks.find(b => b.bookmark === 'chapter-start')?.offset ?? Number.MAX_VALUE);
-        this.verseOffset = convertOffsetToSeconds(chunk.bookmarks.find(b => b.bookmark === 'verse-start')?.offset ?? Number.MAX_VALUE);
+        // this.bookOffset = convertOffsetToSeconds(chunk.bookmarks.find(b => b.bookmark === 'reference-start')?.offset ?? Number.MAX_VALUE);
+        // this.chapterOffset = convertOffsetToSeconds(chunk.bookmarks.find(b => b.bookmark === 'chapter-start')?.offset ?? Number.MAX_VALUE);
+        // this.verseOffset = convertOffsetToSeconds(chunk.bookmarks.find(b => b.bookmark === 'verse-start')?.offset ?? Number.MAX_VALUE);
+
+        this.bookOffset = convertOffsetToSeconds(chunk.words.find(w => w.word.startsWith(verse.bookName))?.offset ?? Number.MAX_VALUE);
+        this.chapterOffset = convertOffsetToSeconds(chunk.words.find(w => w.word.startsWith('chapter'))?.offset ?? Number.MAX_VALUE);
+        this.verseOffset = convertOffsetToSeconds(chunk.words.find(w => w.word.startsWith('verse'))?.offset ?? Number.MAX_VALUE);
 
         this.lastColor = verse.colors[0];
     }
@@ -160,18 +164,11 @@ export default class HTML5Renderer implements IRenderer {
         const defaultColor: string = 'inherit';
 
         const lowFocus = "<span style='color: #222;'>";
-        let verseText = lowFocus;
+        let verseText = '';
         let referenceText = '';
 
         if (this.chunk.type !== 'reference') {
             this.chunk.words.forEach((w, i) => {
-                if (w.offset > this.chunk.startOffset) {
-                    // we're starting the text for this chunk, so wrap anything prior in a span
-                    if (verseText) {
-                        verseText += "</span>";
-                    }
-                }
-
                 // convert from offset to seconds
                 const offsetInSeconds = convertOffsetToSeconds(w.offset);
                 const endInSeconds = convertOffsetToSeconds(w.offset + w.duration);
@@ -204,10 +201,9 @@ export default class HTML5Renderer implements IRenderer {
                 verseText += `${lowFocus}${this.verse.verseText.substring(this.chunk.textEnd, this.verse.verseText.length)}</span>`;
             }
 
-            // verseText += '</span>';
             referenceText = `${lowFocus}${this.verse.bookName} ${this.verse.chapterNumber}:${this.verse.verseNumber}</span>`;
         } else {
-            verseText += `${this.verse.verseText}</span>`;
+            verseText += `${lowFocus}${this.verse.verseText}</span>`;
             referenceText += `<span style="color: ${time >= this.bookOffset && time < this.chapterOffset ? this.verse.colors[0] : defaultColor}">${this.verse.bookName} </span>`;
             referenceText += `<span style="color: ${time >= this.chapterOffset && time < this.verseOffset ? this.verse.colors[1] : defaultColor}">${this.verse.chapterNumber}</span>`;
             referenceText += `:<span style="color: ${time >= this.verseOffset ? this.verse.colors[2] : defaultColor}">${this.verse.verseNumber}</span>`;
