@@ -46,6 +46,8 @@ const defaultSettings: ISettings = {
         style: 'general',
         rate: '1',
     },
+    chunkRepeatCount: 4,
+    chunkWithReferenceRepeatCount: 2,
     videoFPS: 24,
     quality: Qualities[1],
     colors: [

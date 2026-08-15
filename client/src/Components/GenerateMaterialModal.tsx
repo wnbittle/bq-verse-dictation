@@ -11,7 +11,9 @@ import {
     ProgressBar,
     PresenceBadge,
     Spinner,
-    Badge
+    Badge,
+    Checkbox,
+    Divider
 } from "@fluentui/react-components";
 
 import ISelectedVerse from "../model/ISelectedVerse";
@@ -20,6 +22,7 @@ import IGenerateRequest from "../model/IGenerateRequest";
 
 export interface ISelectedVerseResult {
     status: 'pending' | 'inprogress' | 'success' | 'failure';
+    generate: boolean;
     percentComplete: number;
     verse: ISelectedVerse;
     message?: string;
@@ -34,6 +37,7 @@ export interface IGenerateMaterialModalProps {
 
 const convertToStatus = (verse: ISelectedVerse): ISelectedVerseResult => {
     return {
+        generate: false,
         percentComplete: 0,
         status: 'pending',
         verse: verse
@@ -55,22 +59,26 @@ export const GenerateMaterialModal = (props: IGenerateMaterialModalProps) => {
         setIsGenerating(true);
 
         // make a copy of the verse array since this could take a long time
-        const verses: ISelectedVerse[] = [...props.verses];
-        const batchSize: number = 2;
+        const verses: ISelectedVerseResult[] = [...status];
+        const batchSize: number = 1;
 
         for (let i = 0; i < verses.length; i+=batchSize) {
             const promises = [];
             for (let j = 0; j < batchSize; j++) {
                 const index = i + j;
                 if (index < verses.length) {
-                    const v: ISelectedVerse = verses[index];
+                    const v: ISelectedVerseResult = verses[index];
+
+                    if (v.generate === false) {
+                        continue;
+                    }
 
                     let newStatus = [...status];
                     newStatus[index].percentComplete = 0.0;
                     newStatus[index].status = 'inprogress';
                     setStatus(newStatus);
         
-                    promises.push(generateVideo(props.settings, v).then((result) => {
+                    promises.push(generateVideo(props.settings, v.verse).then((result) => {
                         let newStatus = [...status];
                         newStatus[index].percentComplete = result.percentComplete;
                         newStatus[index].status = result.status;
@@ -100,6 +108,24 @@ export const GenerateMaterialModal = (props: IGenerateMaterialModalProps) => {
         setStatus(props.verses.map(convertToStatus));
     };
 
+    const onGenerateSelected = (verse: ISelectedVerse, checked: boolean) => {
+        let newStatus = [...status];
+        const index = newStatus.findIndex(s => s.verse.id === verse.id);
+        if (index !== -1) {
+            newStatus[index] = {
+                ...newStatus[index],
+                generate: checked
+            };
+            setStatus(newStatus);
+        }
+    };
+
+    const onSelectAll = (checked: boolean) => {
+        let newStatus = [...status];
+        newStatus.forEach(s => s.generate = checked);
+        setStatus(newStatus);
+    };
+
     return (
         <Dialog modalType="alert" open={open} onOpenChange={(event, data) => setOpen(data.open)}>
             {props.children}
@@ -108,11 +134,15 @@ export const GenerateMaterialModal = (props: IGenerateMaterialModalProps) => {
                     <DialogTitle>Generate Material <Badge appearance="filled" color="informative" shape='rounded'>{percentComplete.toFixed(0)}%</Badge></DialogTitle>
                     <DialogContent>
                         <p>Are you sure you are ready to generate the material? This can be long process so make sure you are ready.</p>
-                        <div className="flex flex-column flex-gap-s">
+                        
+                        <Checkbox label={'Select All'} onChange={(e, data) => onSelectAll(data.checked as boolean)} />
+                        <Divider className="pt-s pb-m" />
+                        <div className="flex flex-column flex-gap-s" style={{ width: "95%" }}>
                             {status.map(v => (
                                 <div key={v.verse.id} className="flex flex-row flex-gap-m" style={{ alignItems: 'center' }}>
-                                    <div style={{ width: 125, overflow: 'hidden', textOverflow: 'ellipsis' }}>{v.verse.bookName}&nbsp;{v.verse.chapterNumber}:{v.verse.verseNumber}</div>
-                                    <ProgressBar style={{ width: 400 }} value={v.percentComplete} />
+                                    <div style={{ width: 30 }}><Checkbox onChange={(e, data) => onGenerateSelected(v.verse, data.checked as boolean)} checked={v.generate} /></div>
+                                    <div style={{ textWrap: "nowrap" }}>{v.verse.bookName}&nbsp;{v.verse.chapterNumber}:{v.verse.verseNumber}</div>
+                                    <ProgressBar value={v.percentComplete} thickness="large" />
                                     <div style={{ width: 20 }}>
                                         {v.status === "inprogress" && <Spinner size="extra-tiny" />}
                                         {v.status === "pending" && <PresenceBadge status="away" />}
@@ -164,7 +194,8 @@ const generateVideo = async (settings: ISettings, v: ISelectedVerse): Promise<IS
                 percentComplete: 0.0,
                 status: 'failure',
                 message: `Failed to generate audio: ${audioResponse.status}: ${audioResponse.statusText}`,
-                verse: v
+                verse: v,
+                generate: false
             };
         }
 
@@ -187,7 +218,8 @@ const generateVideo = async (settings: ISettings, v: ISelectedVerse): Promise<IS
                 percentComplete: 0.0,
                 status: 'failure',
                 message: `Failed to generate video: ${audioResponse.status}: ${audioResponse.statusText}`,
-                verse: v
+                verse: v,
+                generate: false
             };
         }
 
@@ -195,7 +227,8 @@ const generateVideo = async (settings: ISettings, v: ISelectedVerse): Promise<IS
         return {
             percentComplete: 1.0,
             status: 'success',
-            verse: v
+            verse: v,
+            generate: false
         };
 
     } catch (err) {
@@ -204,7 +237,8 @@ const generateVideo = async (settings: ISettings, v: ISelectedVerse): Promise<IS
             percentComplete: 0.0,
             status: 'failure',
             message: `Failed to generate video: ${err}`,
-            verse: v
+            verse: v,
+            generate: false
         };
     }
 };

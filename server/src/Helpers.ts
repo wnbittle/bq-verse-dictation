@@ -1,5 +1,4 @@
 import ISelectedVerse from "./model/ISelectedVerse";
-import ISettings from "./model/ISettings";
 
 /**
  * Converts from ticks to seconds.  1 tick = 100 nanoseconds.

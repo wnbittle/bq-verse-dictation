@@ -46,6 +46,8 @@ export default class TextToSpeechConverter {
             // settings
             name: this.settings.name,
             voice: voice,
+            chunkRepeatCount: this.settings.chunkRepeatCount,
+            chunkWithReferenceRepeatCount: this.settings.chunkWithReferenceRepeatCount,
             videoFPS: this.settings.videoFPS,
             quality: this.settings.quality,
             colors: this.settings.colors,
@@ -183,7 +185,7 @@ export default class TextToSpeechConverter {
                 chunk.words.forEach((w, i) => {
                     if (w.textOffset === -1) {
                         // find the first replacement where the text is the same and it's after the previous offset
-                        const replacement = this.verse.aliases.find(r => r.replacement === w.word);
+                        const replacement = this.verse.aliases.find(r => r.replacement.replace(/[^\w]|_/g, "") === w.word.replace(/[^\w]|_/g, ""));
 
                         if (replacement) {
                             // console.info(`Replaced '${w.word}' with '${replacement.original}'`);

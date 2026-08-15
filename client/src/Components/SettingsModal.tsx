@@ -23,7 +23,7 @@ import ISettings from "../model/ISettings";
 import IQuality from "../model/IQuality";
 import { VoiceSelector } from "./VoiceSelector";
 import IVoice from "../model/IVoice";
-import { PersonVoiceRegular, VideoClipRegular } from "@fluentui/react-icons";
+import { ArrowRepeatAllRegular, PersonVoiceRegular, VideoClipRegular } from "@fluentui/react-icons";
 
 const useStyles = makeStyles({
   customSurface: {
@@ -46,6 +46,8 @@ export const SettingsModal = (props: ISettingsModalProps) => {
 
     const [name, setName] = React.useState<string>(props.settings.name);
     const [voice, setVoice] = React.useState<IVoice>(props.settings.voice);
+    const [chunkRepeatCount, setChunkRepeatCount] = React.useState<string>(props.settings.chunkRepeatCount?.toString());
+    const [chunkWithReferenceRepeatCount, setChunkWithReferenceRepeatCount] = React.useState<string>(props.settings.chunkWithReferenceRepeatCount?.toString());
     const [videoFPS, setVideoFPS] = React.useState<string>(props.settings.videoFPS?.toString());
     const [quality, setQuality] = React.useState<IQuality>(props.settings.quality);
     const [selectedQualities, setSelectedQualities] = React.useState<string[]>([props.settings.quality.name]);
@@ -53,6 +55,8 @@ export const SettingsModal = (props: ISettingsModalProps) => {
     React.useEffect(() => {
         setName(props.settings.name);
         setVoice(props.settings.voice);
+        setChunkRepeatCount(props.settings.chunkRepeatCount?.toString());
+        setChunkWithReferenceRepeatCount(props.settings.chunkWithReferenceRepeatCount?.toString());
         setVideoFPS(props.settings.videoFPS?.toString());
         setQuality(props.settings.quality);
         setSelectedQualities([props.settings.quality.name]);
@@ -64,6 +68,8 @@ export const SettingsModal = (props: ISettingsModalProps) => {
         props.onSettingsChanged({
             name: name,
             voice: voice,
+            chunkRepeatCount: parseInt(chunkRepeatCount, 10),
+            chunkWithReferenceRepeatCount: parseInt(chunkWithReferenceRepeatCount, 10),
             videoFPS: fps,
             quality: quality,
             colors: props.settings.colors
@@ -77,6 +83,8 @@ export const SettingsModal = (props: ISettingsModalProps) => {
         props.onSettingsChanged({
             name: name,
             voice: voice,
+            chunkRepeatCount: parseInt(chunkRepeatCount, 10),
+            chunkWithReferenceRepeatCount: parseInt(chunkWithReferenceRepeatCount, 10),
             videoFPS: fps,
             quality: quality,
             colors: props.settings.colors
@@ -102,7 +110,24 @@ export const SettingsModal = (props: ISettingsModalProps) => {
                                         setName(data.value);
                                     }} onBlur={onSettingsChanged} />
                                 </div>
-                                <Divider className="flex-grow-0 pt-l"><VideoClipRegular /> Video Settings</Divider>
+                                <Divider className="flex-grow-0 pt-m"><ArrowRepeatAllRegular /> Repeat Settings</Divider>
+                                <div className="flex flex-column flex-gap-s">
+                                    <Label htmlFor={`${inputId}-rptc`} size="small">
+                                        Chunk Repeat Count
+                                    </Label>
+                                    <Input id={`${inputId}-rptc`} value={chunkRepeatCount} onChange={(e, data) => {
+                                        setChunkRepeatCount(data.value);
+                                    }} onBlur={onSettingsChanged} />
+                                </div>
+                                <div className="flex flex-column flex-gap-s">
+                                    <Label htmlFor={`${inputId}-rptc-ref`} size="small">
+                                        Chunk Repeat Count (with Reference)
+                                    </Label>
+                                    <Input id={`${inputId}-rptc-ref`} value={chunkWithReferenceRepeatCount} onChange={(e, data) => {
+                                        setChunkWithReferenceRepeatCount(data.value);
+                                    }} onBlur={onSettingsChanged} />
+                                </div>
+                                <Divider className="flex-grow-0 pt-m"><VideoClipRegular /> Video Settings</Divider>
                                 <div className="flex flex-column flex-gap-s">
                                     <Label htmlFor={`${inputId}-fps`} size="small">
                                         Video Frames / Second
