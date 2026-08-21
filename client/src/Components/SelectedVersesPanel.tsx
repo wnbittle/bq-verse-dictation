@@ -4,7 +4,6 @@ import { SelectedVerseCard } from './SelectedVerseCard';
 import { BookRegular, DeleteRegular } from '@fluentui/react-icons';
 
 import ISelectedVerse from '../model/ISelectedVerse';
-import IBreak from '../model/IBreak';
 import ISettings from '../model/ISettings';
 
 export interface ISelectedVersesPanelProps {
@@ -12,8 +11,7 @@ export interface ISelectedVersesPanelProps {
     verses: ISelectedVerse[];
     onVerseHeaderClick: (verse: ISelectedVerse) => void;
     onVerseDeselectClick: (verse: ISelectedVerse) => void;
-    onVerseBreakChange: (verse: ISelectedVerse) => void;
-    onVerseAliasChange: (verse: ISelectedVerse) => void;
+    onVerseTokenChange: (verse: ISelectedVerse) => void;
     onVerseVoiceChange: (verse: ISelectedVerse) => void;
     onChapterRemove: (bookNumber: number, chapterNumber: number) => void;
 }
@@ -99,8 +97,7 @@ export const SelectedVersesPanel = (props: ISelectedVersesPanelProps) => {
                                             verse={v}
                                             onVerseHeaderClick={props.onVerseHeaderClick}
                                             onVerseDeselectClick={props.onVerseDeselectClick}
-                                            onVerseBreakChange={props.onVerseBreakChange}
-                                            onVerseAliasChange={props.onVerseAliasChange}
+                                            onVerseTokenChange={props.onVerseTokenChange}
                                             onVerseVoiceChange={props.onVerseVoiceChange} />
                                     ))}
                                 </div>

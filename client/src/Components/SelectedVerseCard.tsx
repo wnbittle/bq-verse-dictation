@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Card, CardHeader, Button, Badge, Subtitle2Stronger, Link, Tooltip, Dialog, DialogTrigger, DialogSurface, DialogBody, DialogTitle, DialogContent, DialogActions, Field, Input, InputOnChangeData } from "@fluentui/react-components";
+import { Card, CardHeader, Button, Badge, Subtitle2Stronger, Link, Tooltip, Dialog, DialogSurface, DialogBody, DialogTitle, DialogContent, DialogActions, Field, Input, InputOnChangeData } from "@fluentui/react-components";
 import { CopyRegular, DeleteRegular, PersonVoiceRegular } from "@fluentui/react-icons";
 
 import ISelectedVerse from "../model/ISelectedVerse";
@@ -8,14 +8,14 @@ import ISettings from "../model/ISettings";
 import IAlias from "../model/IAlias";
 import { VoiceSelector } from "./VoiceSelector";
 import IVoice from "../model/IVoice";
+import IPhenome from "../model/IPhenome";
 
 export interface ISelectedVerseCardProps {
     settings: ISettings;
     verse: ISelectedVerse;
     onVerseHeaderClick: (verse: ISelectedVerse) => void;
     onVerseDeselectClick: (verse: ISelectedVerse) => void;
-    onVerseBreakChange: (verse: ISelectedVerse) => void;
-    onVerseAliasChange: (verse: ISelectedVerse) => void;
+    onVerseTokenChange: (verse: ISelectedVerse) => void;
     onVerseVoiceChange: (verse: ISelectedVerse) => void;
 }
 
@@ -26,17 +26,21 @@ interface IToken {
     end: number;
 
     isBreak: boolean;
-    alias: string | null;
+    isPunctuation: boolean;
+    alias?: string;
+    phenome?: string;
 }
 
 // TODO: Allow setting the study #
 
 export const SelectedVerseCard = (props: ISelectedVerseCardProps) => {
     const tokens: IToken[] = [];
-    const items = props.verse.verseText.split(/(\s+)/gi);
+    const items = props.verse.verseText
+        .split(/(\s+)|([^\w\s])/gi)
+        .filter(token => token !== undefined && token !== null && token !== '');
 
-    const [selectedToken, setSelectedToken] = React.useState<IAlias>();
-    const [aliasModalOpen, setAliasModelOpen] = React.useState<boolean>(false);
+    const [selectedToken, setSelectedToken] = React.useState<IToken>();
+    const [tokenModalOpen, setTokenModalOpen] = React.useState<boolean>(false);
     const [voiceModalOpen, setVoiceModalOpen] = React.useState<boolean>(false);
     const [voice, setVoice] = React.useState(props.verse.voice);
 
@@ -51,13 +55,16 @@ export const SelectedVerseCard = (props: ISelectedVerseCardProps) => {
         if (t?.trim()) {
             const breakIdx = (props.verse.breaks ?? []).findIndex(b => b.id === i);
             const aliasIdx = (props.verse.aliases ?? []).findIndex(a => a.id === i);
+            const phenomeIdx = (props.verse.phenomes ?? []).findIndex(p => p.id === i);
             tokens.push({
                 id: i,
                 text: t,
                 start: start,
                 end: end,
                 isBreak: breakIdx >= 0,
-                alias: aliasIdx >= 0 ? props.verse.aliases[aliasIdx].replacement : null
+                isPunctuation: t.length === 1 && /[^\w\s]/gi.test(t),
+                alias: aliasIdx >= 0 ? props.verse.aliases[aliasIdx].replacement : undefined,
+                phenome: phenomeIdx >= 0 ? props.verse.phenomes[phenomeIdx].phenome : undefined
             });
         }
         position = end;
@@ -65,14 +72,11 @@ export const SelectedVerseCard = (props: ISelectedVerseCardProps) => {
 
     const onTokenClick = (e: React.MouseEvent, token: IToken) => {
         if (e.ctrlKey) {
-            // then prompt for alias
+            // then prompt for alias/phenome
             setSelectedToken({
-                id: token.id,
-                location: token.start,
-                original: token.text,
-                replacement: token.alias || token.text
+                ...token
             });
-            setAliasModelOpen(true);
+            setTokenModalOpen(true);
         } else {
             // then add breakpoint
             const breaks = [...props.verse.breaks];
@@ -90,7 +94,7 @@ export const SelectedVerseCard = (props: ISelectedVerseCardProps) => {
                 });
             }
             breaks.sort((a, b) => a.id - b.id);
-            props.onVerseBreakChange({
+            props.onVerseTokenChange({
                 ...props.verse,
                 breaks: breaks
             });
@@ -105,40 +109,93 @@ export const SelectedVerseCard = (props: ISelectedVerseCardProps) => {
         const token = selectedToken;
         setSelectedToken({
             ...token!,
-            replacement: data.value?.trim()
+            alias: data.value?.trim()
         });
     };
 
-    const onAliasApply = () => {
-        const alias = selectedToken!;
-        const aliases = [...props.verse.aliases];
-        const idx = aliases.findIndex(a => a.id === alias.id);
+    const onPhenomeChange = (e: React.ChangeEvent, data: InputOnChangeData) => {
+        const token = selectedToken;
+        setSelectedToken({
+            ...token!,
+            phenome: data.value?.trim()
+        });
+    };
 
-        if (alias.original === alias.replacement) {
+    const onTokenEditApply = () => {
+        const token = selectedToken!;
+
+        props.onVerseTokenChange({
+            ...props.verse,
+            //aliases: updateAliases(token),
+            phenomes: updatePhenomes(token)
+        });
+
+        setTokenModalOpen(false);
+    };
+
+    const updateAliases = (token: IToken): IAlias[] => {
+        const aliases = [...props.verse.aliases];
+        const aliasIdx = aliases.findIndex(a => a.id === token.id);
+        const alias = aliasIdx >= 0 ? aliases[aliasIdx] : null;
+
+        // if the token alias is the same as the original or if the
+        // token alias is empty, then remove the alias
+        if (token.alias === alias?.original || !token.alias) {
             // then remove the alias
-            if (idx >= 0) {
-                aliases.splice(idx, 1);
+            if (aliasIdx >= 0) {
+                aliases.splice(aliasIdx, 1);
             }
         } else {
             // then add/update the alias
-            if (idx >= 0) {
-                aliases[idx] = alias;
+            let aliasToAdd: IAlias = {
+                id: token.id,
+                location: token.start,
+                original: token.text,
+                replacement: token.alias!
+            };
+            if (aliasIdx >= 0) {
+                aliases[aliasIdx] = aliasToAdd;
             } else {
-                aliases.push({ ...alias });
+                aliases.push(aliasToAdd);
             }
         }
 
         aliases.sort((a, b) => a.id - b.id);
-        props.onVerseBreakChange({
-            ...props.verse,
-            aliases: aliases
-        });
 
-        setAliasModelOpen(false);
+        return aliases;
     };
 
-    const onAliasCancel = () => {
-        setAliasModelOpen(false);
+    const updatePhenomes = (token: IToken): IPhenome[] => {
+        const phenomes = [...props.verse.phenomes];
+        const phenomeIdx = phenomes.findIndex(p => p.id === token.id);
+
+        if (!token.phenome) {
+            // then remove the phenome
+            if (phenomeIdx >= 0) {
+                phenomes.splice(phenomeIdx, 1);
+            }
+        } else {
+            // then add/update the phenome
+            let phenomeToAdd: IPhenome = {
+                id: token.id,
+                location: token.start,
+                text: token.text,
+                phenome: token.phenome!
+            };
+            if (phenomeIdx >= 0) {
+                phenomes[phenomeIdx] = phenomeToAdd;
+            } else {
+                phenomes.push(phenomeToAdd);
+            }
+        }
+
+        phenomes.sort((a, b) => a.id - b.id);
+
+        return phenomes;
+    };
+
+    const onTokenEditCancel = () => {
+        setTokenModalOpen(false);
     };
 
     const onVoiceSelectionApply = () => {
@@ -215,26 +272,36 @@ export const SelectedVerseCard = (props: ISelectedVerseCardProps) => {
 
             <div>
                 {tokens.map(t => {
-                    return <span key={t.id} className={`svc-token${t.isBreak ? ' svc-token-selected' : ''}`} onClick={(e) => onTokenClick(e, t)}>
-                        <span className={t.alias ? 'strikethrough' : ''}>{t.text}</span>
-                        <span hidden={!t.alias} style={{ fontStyle: 'italic', color: 'red' }}>&nbsp;{t.alias}</span>
-                    </span>;
+                    if (t.isPunctuation) {
+                        return <span key={t.id}>{t.text}&nbsp;</span>;
+                    } else {
+                        return <span key={t.id} className={`svc-token${t.isBreak ? ' svc-token-selected' : ''}`} onClick={(e) => onTokenClick(e, t)}>
+                            <span className={t.alias ? 'strikethrough' : ''}>{t.text}</span>
+                            <span hidden={!t.alias} style={{ fontStyle: 'italic', color: 'red' }}>&nbsp;{t.alias}</span>
+                            <span hidden={!t.phenome} style={{ color: '#479ef5' }}>&nbsp;({t.phenome})</span>
+                        </span>;
+                    }
                 })}
             </div>
 
-            <Dialog open={aliasModalOpen}>
+            <Dialog open={tokenModalOpen}>
                 <DialogSurface>
                     <DialogBody>
-                        <DialogTitle>Change Pronunciation</DialogTitle>
+                        <DialogTitle>Pronunciation</DialogTitle>
                         <DialogContent>
+                            <div className="pb-s">For pronunciation, use the <Link href="https://en.wikipedia.org/wiki/International_Phonetic_Alphabet">International Phonetic Alphabet (IPA)</Link>.</div>
+                            {/* <Field
+                                label="Enter the desired substitution:">
+                                <Input defaultValue={selectedToken?.alias} onChange={onAliasChange} />
+                            </Field> */}
                             <Field
                                 label="Enter the desired pronunciation:">
-                                <Input defaultValue={selectedToken?.replacement} onChange={onAliasChange} />
+                                <Input defaultValue={selectedToken?.phenome} onChange={onPhenomeChange} />
                             </Field>
                         </DialogContent>
                         <DialogActions>
-                            <Button appearance="secondary" onClick={onAliasCancel}>Cancel</Button>
-                            <Button appearance="primary" onClick={onAliasApply}>Apply</Button>
+                            <Button appearance="secondary" onClick={onTokenEditCancel}>Cancel</Button>
+                            <Button appearance="primary" onClick={onTokenEditApply}>Apply</Button>
                         </DialogActions>
                     </DialogBody>
                 </DialogSurface>

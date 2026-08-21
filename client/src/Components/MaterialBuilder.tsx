@@ -2,12 +2,9 @@ import * as React from "react";
 import {
     DialogTrigger,
     Button,
-    Title3,
     Title2,
     Divider,
-    Label,
-    Tooltip,
-    Body1
+    Label
 } from "@fluentui/react-components";
 
 import kjv from '../kjv.json';
@@ -97,6 +94,7 @@ const convertIdToSelectedVerse = (id: string, sizing: ISizing, settings: ISettin
         verseText: vs?.text ?? '',
         breaks: [],
         aliases: [],
+        phenomes: [],
         sizing: { ...sizing },
         voice: { ...settings.voice }
     };
@@ -231,6 +229,7 @@ export const MaterialBuilder = () => {
                 ...v,
                 breaks: v.breaks ?? [],
                 aliases: v.aliases ?? [],
+                phenomes: v.phenomes ??[],
                 sizing: v.sizing ?? { ...defaultSizing }
             })));
             setSettings({
@@ -313,16 +312,7 @@ export const MaterialBuilder = () => {
         setSelectedVerses(newSelectedVerses);
     }
 
-    const onVerseBreakChange = (verse: ISelectedVerse) => {
-        const selected = [...selectedVerses];
-        const idx = selected.findIndex(v => v.id === verse.id);
-        if (idx >= 0) {
-            selected[idx] = verse;
-        }
-        setSelectedVerses(selected);
-    };
-
-    const onVerseAliasChange = (verse: ISelectedVerse) => {
+    const onVerseTokenChange = (verse: ISelectedVerse) => {
         const selected = [...selectedVerses];
         const idx = selected.findIndex(v => v.id === verse.id);
         if (idx >= 0) {
@@ -492,8 +482,7 @@ export const MaterialBuilder = () => {
                     verses={selectedVerses}
                     onVerseHeaderClick={onVerseHeaderClick}
                     onVerseDeselectClick={onVerseDeselectClick}
-                    onVerseBreakChange={onVerseBreakChange}
-                    onVerseAliasChange={onVerseAliasChange}
+                    onVerseTokenChange={onVerseTokenChange}
                     onVerseVoiceChange={onVerseVoiceChange}
                     onChapterRemove={onChapterRemove}
                 />

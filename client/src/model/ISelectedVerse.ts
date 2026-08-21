@@ -1,5 +1,6 @@
 import IAlias from "./IAlias";
 import IBreak from "./IBreak";
+import IPhenome from "./IPhenome";
 import ISizing from "./ISizing";
 import IVoice from "./IVoice";
 
@@ -30,6 +31,9 @@ export default interface ISelectedVerse {
 
     /** The user-defined aliases for correcting pronunciation */
     aliases: IAlias[];
+    
+    /** The user-defined phenomes for correcting pronunciation */
+    phenomes: IPhenome[];
 
     /** The render sizing */
     sizing: ISizing;

@@ -8,6 +8,7 @@ import ITextToSpeechResult from "../model/ITextToSpeechResult";
 import IAudioChunk from "../model/IAudioChunk";
 import IAlias from "../model/IAlias";
 import { generateUniqueFileName } from "../Helpers";
+import IPhenome from "../model/IPhenome";
 
 export default class TextToSpeechConverter {
     private readonly settings: ISettings;
@@ -41,6 +42,7 @@ export default class TextToSpeechConverter {
             verseText: this.verse.verseText,
             breaks: this.verse.breaks,
             aliases: this.verse.aliases,
+            phenomes: this.verse.phenomes,
             sizing: this.verse.sizing,
 
             // settings
@@ -98,27 +100,30 @@ export default class TextToSpeechConverter {
             // NOTE: we always send the full verse text
             let speakSSML = '';
             if (definition.type === 'all') {
-                const text = replacePronunciation(this.verse.verseText, this.verse.aliases);
-                speakSSML = `<bookmark mark='chunk-start'/><break strength="weak" />${text}<break strength="weak" /><bookmark mark='chunk-end'/>`;
+                const text = replacePhenomes(this.verse.verseText, this.verse.phenomes);
+                speakSSML = `<break strength="weak" />${text}<break strength="weak" />`;
             } else if (definition.type === 'reference') {
-                speakSSML = `<bookmark mark='chunk-start'/><break strength="weak" /><bookmark mark='reference-start'/>${this.verse.bookName} <bookmark mark='chapter-start'/>chapter ${this.verse.chapterNumber} <bookmark mark='verse-start'/>verse ${this.verse.verseNumber}<break strength="weak" /><bookmark mark='chunk-end'/>`;
+                speakSSML = `<break strength="weak" />${this.verse.bookName} chapter ${this.verse.chapterNumber} verse ${this.verse.verseNumber}<break strength="weak" />`;
             } else if (definition.type === 'chunk') {
-                // get the aliases withing the start/end
-                const aliases = this.verse.aliases.filter(a => a.location >= definition.start && a.location <= definition.end);
-                const text = replacePronunciation(this.verse.verseText.substring(definition.start, definition.end), aliases);
-                speakSSML = `<bookmark mark='chunk-start'/><break strength="weak" />${text}<break strength="weak" /><bookmark mark='chunk-end'/>`;
+                const phenomes = this.verse.phenomes.filter(a => a.location >= definition.start && a.location <= definition.end);
+                const text = replacePhenomes(this.verse.verseText.substring(definition.start, definition.end), phenomes);
+                speakSSML = `<break strength="weak" />${text}<break strength="weak" />`;
             }
 
-            console.log(speakSSML);
+            // console.log(speakSSML);
 
             // produce a text for the synthesizer to speak
-            const ssml = `<speak version='1.0' xml:lang='en-US' xmlns='http://www.w3.org/2001/10/synthesis' xmlns:mstts='http://www.w3.org/2001/mstts'> \r\n \
-                <voice name='${voice.name}'> \r\n \
+            const ssml = `<speak version="1.0" xml:lang="en-US" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts"> \r\n \
+                <voice name="${voice.name}"> \r\n \
                     <mstts:express-as style="${voice.style}"> \r\n \
-                        <prosody rate="${voice.rate}">${speakSSML}</prosody> \r\n \
+                        <prosody rate="${voice.rate}"> \r\n \
+                            ${speakSSML} \r\n \
+                        </prosody> \r\n \
                     </mstts:express-as> \r\n \
                 </voice> \r\n \
             </speak>`;
+
+            console.log(ssml);
 
             console.info("Tapping into synthesizer hooks");
             // synthesizer.synthesisCompleted = (sender, event) => {};
@@ -181,18 +186,32 @@ export default class TextToSpeechConverter {
                 chunk.endOffset = chunk.words.map(w => w.offset + w.duration).reduce((p, c) => Math.max(p, c));
                 chunk.duration = chunk.endOffset - chunk.startOffset;
 
-                // make sure replacements are swapped back in
+                // check for any goof ups from the API - this seems to only happen when the end of the
+                // text has punctuation
                 chunk.words.forEach((w, i) => {
-                    if (w.textOffset === -1) {
-                        // find the first replacement where the text is the same and it's after the previous offset
-                        const replacement = this.verse.aliases.find(r => r.replacement.replace(/[^\w]|_/g, "") === w.word.replace(/[^\w]|_/g, ""));
-
-                        if (replacement) {
-                            // console.info(`Replaced '${w.word}' with '${replacement.original}'`);
-                            w.word = replacement.original;
+                    if (definition.type !== 'reference' && this.verse.verseText.indexOf(w.word) < 0) {
+                        console.warn(`Word '${w.word}' not found in verse text`);
+                        // this usually happens when azure speech synthesis returns some xml tags in the word boundary event
+                        if (w.boundaryType === 'PunctuationBoundary') {
+                            w.word = w.word.at(w.word.length - 1)!;
+                            w.wordLength = 1;
                         }
                     }
                 });
+
+                // make sure replacements are swapped back in
+                // chunk.words.forEach((w, i) => {
+                //     if (w.textOffset === -1) {
+                //         // find the first replacement where the text is the same and it's after the previous offset
+                //         // const replacement = this.verse.aliases.find(r => r.replacement.replace(/[^\w]|_/g, "") === w.word.replace(/[^\w]|_/g, ""));
+                //         const replacement = this.verse.aliases.find(r => r.replacement === w.word);
+
+                //         if (replacement) {
+                //             // console.info(`Replaced '${w.word}' with '${replacement.original}'`);
+                //             w.word = replacement.original;
+                //         }
+                //     }
+                // });
 
                 chunkAudio.push({ metadata: chunk, audio: result.audioData });
 
@@ -264,7 +283,7 @@ const getChunkDefinitions = (verse: ISelectedVerse): IChunkDefinition[] => {
     return output;
 };
 
-const replacePronunciation = (text: string, aliases: IAlias[]): string => {
+const replaceAliases = (text: string, aliases: IAlias[]): string => {
     let output = text;
 
     console.info(aliases);
@@ -272,9 +291,25 @@ const replacePronunciation = (text: string, aliases: IAlias[]): string => {
     // subsitutions
     aliases.forEach(sub => {
         // trim puncuation characters
-        const original = sub.original.replace(/['!"&(),.:;?]/gi, '');
+        const original = sub.original;
         const regex = new RegExp(`(\\b${original}\\b)`, 'gi');
         output = output.replace(regex, `<sub alias="${sub.replacement}">$1</sub>`);
+    });
+
+    return output;
+};
+
+const replacePhenomes = (text: string, phenomes: IPhenome[]): string => {
+    let output = text;
+
+    console.info(phenomes);
+
+    // subsitutions
+    phenomes.forEach(sub => {
+        // trim puncuation characters
+        const original = sub.text;
+        const regex = new RegExp(`(\\b${original}\\b)`, 'gi');
+        output = output.replace(regex, `<phoneme alphabet="ipa" ph="${sub.phenome}">$1</phoneme>`);
     });
 
     return output;
